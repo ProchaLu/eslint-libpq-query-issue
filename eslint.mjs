@@ -1,15 +1,16 @@
-import { spawn } from 'node:child_process';
+import { ESLint } from 'eslint';
 
-const child = spawn(
-  'node',
-  ['node_modules/eslint/bin/eslint.js', '.', '--max-warnings', '0'],
-  {
-    stdio: 'inherit',
-    shell: false, // no shell so we get the real exit code
-  },
-);
+async function runEslint() {
+  try {
+    const eslint = new ESLint();
+    const results = await eslint.lintFiles(['.']);
+    console.log(results);
+  } catch (error) {
+    console.error('ESLint crashed:', error);
+    process.exit(1);
+  }
+}
 
-child.on('exit', (code) => {
-  console.log('ESLint exited with code:', code);
-  process.exit(code);
+runEslint().catch((error) => {
+  console.error('Failed to run ESLint:', error);
 });
