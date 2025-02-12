@@ -1,0 +1,50 @@
+name: CI
+on: push
+
+jobs:
+  ci:
+    name: Jest Unit Tests, Type Checking, Linting, Playwright End to End Tests
+    runs-on: ubuntu-latest # or macos-latest, windows-latest
+    timeout-minutes: 30
+    # TODO: Update environment variables with your own database credentials
+    env:
+      PGHOST: localhost
+      PGDATABASE: winter2025
+      PGUSERNAME: winter2025
+      PGPASSWORD: winter2025
+    steps:
+      - name: Start preinstalled PostgreSQL on Ubuntu
+        run: |
+          sudo systemctl start postgresql.service
+          pg_isready
+      - name: Create database user
+        run: |
+          sudo -u postgres psql --command="CREATE USER $PGUSERNAME PASSWORD '$PGPASSWORD'" --command="\du"
+      - name: Create database and allow user
+        run: |
+          sudo -u postgres createdb --owner=$PGUSERNAME $PGDATABASE
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+
+      # Use the official setup-node action (sets up Node.js):
+      # https://github.com/actions/setup-node
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install
+      - name: Jest unit tests
+        run: pnpm jest
+      - name: Run database migrations
+        run: pnpm migrate up
+      - name: Build Next.js app (types needed for TSC and ESLint)
+        run: pnpm build
+      - name: Check TypeScript Types
+        run: pnpm tsc
+      - name: Lint with ESLint
+        run: pnpm eslint . --max-warnings 0
+      - name: Lint with Stylelint
+        run: pnpm stylelint '**/*.{css,scss,less,js,tsx}'
