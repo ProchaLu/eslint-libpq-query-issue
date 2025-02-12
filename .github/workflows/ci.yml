@@ -13,27 +13,16 @@ jobs:
       PGUSERNAME: winter2025
       PGPASSWORD: winter2025
     steps:
-      - name: Install PostgreSQL on Windows
-        run: choco install postgresql16 --params "/Password:${{ env.PGPASSWORD }}" -y
+      - name: Set up PostgreSQL on Windows
+        uses: Harmon758/postgresql-action@v1
+        with:
+          postgresql version: '16'
+          postgresql user: ${{ env.PGUSERNAME }}
+          postgresql password: ${{ env.PGPASSWORD }}
 
-      - name: Add PostgreSQL to PATH
-        run: echo "C:\Program Files\PostgreSQL\16\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
-
-      - name: Start PostgreSQL Service
+      - name: Verify PostgreSQL is Running
         run: |
-          net start postgresql-x64-16
-          sc query postgresql-x64-16
-
-      - name: Verify `psql` is Available
-        run: |
-          echo $env:Path
-          psql --version
-        env:
-          PGPASSWORD: ${{ env.PGPASSWORD }}
-
-      - name: Create Database User
-        run: |
-          psql -U postgres -c "CREATE USER ${{ env.PGUSERNAME }} WITH PASSWORD '${{ env.PGPASSWORD }}'"
+          psql -U postgres -c "SELECT 1"
         env:
           PGPASSWORD: ${{ env.PGPASSWORD }}
 
