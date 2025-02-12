@@ -13,10 +13,9 @@ jobs:
       PGUSERNAME: winter2025
       PGPASSWORD: winter2025
     steps:
-      - name: Start preinstalled PostgreSQL on Ubuntu
+      - name: Start preinstalled PostgreSQL on Windows
         run: |
-          sudo systemctl start postgresql.service
-          pg_isready
+          psql -U postgres
       - name: Create database user
         run: |
           sudo -u postgres psql --command="CREATE USER $PGUSERNAME PASSWORD '$PGPASSWORD'" --command="\du"
