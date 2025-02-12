@@ -17,12 +17,7 @@ jobs:
     steps:
       - name: Add PostgreSQL binaries to PATH
         shell: bash
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "$PGBIN" >> $GITHUB_PATH
-          elif [ "$RUNNER_OS" == "Linux" ]; then
-            echo "$(pg_config --bindir)" >> $GITHUB_PATH
-          fi
+        run: echo "$PGBIN" >> $GITHUB_PATH
       - name: Start preinstalled PostgreSQL
         shell: bash
         run: |
@@ -50,8 +45,6 @@ jobs:
 
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-      # Use the official setup-node action (sets up Node.js):
-      # https://github.com/actions/setup-node
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
@@ -66,21 +59,10 @@ jobs:
         run: pnpm build
       - name: Check TypeScript Types
         run: pnpm tsc
-
       - name: Run eslint.mjs
         shell: bash
         run: |
           echo "Running eslint.mjs..."
           node eslint.mjs
-
-      - name: Lint with ESLint and Show Exit Code
-        run: |
-          echo "Running ESLint..."
-          output=$(pnpm eslint . --max-warnings 0 2>&1)
-          EXIT_CODE=$?
-          echo "$output"
-          echo "ESLint exit code: $EXIT_CODE"
-          exit $EXIT_CODE
-        shell: bash
       - name: Lint with Stylelint
         run: pnpm stylelint '**/*.{css,scss,less,js,tsx}'
