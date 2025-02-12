@@ -15,12 +15,6 @@ jobs:
       PGUSERNAME: winter2025
       PGPASSWORD: winter2025
     steps:
-      - name: Install PostgreSQL on macOS
-        if: runner.os == 'macOS'
-        run: |
-          brew install postgresql@16
-          # --overwrite: Overwrite pre-installed GitHub Actions PostgreSQL binaries
-          brew link --overwrite postgresql@16
       - name: Add PostgreSQL binaries to PATH
         shell: bash
         run: |
@@ -74,8 +68,10 @@ jobs:
         run: pnpm tsc
       - name: Lint with ESLint and Show Exit Code
         run: |
-          pnpm eslint . --max-warnings 0
+          echo "Running ESLint..."
+          output=$(pnpm eslint . --max-warnings 0 2>&1)
           EXIT_CODE=$?
+          echo "$output"
           echo "ESLint exit code: $EXIT_CODE"
           exit $EXIT_CODE
         shell: bash
