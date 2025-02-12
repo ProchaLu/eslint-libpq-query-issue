@@ -13,15 +13,35 @@ jobs:
       PGUSERNAME: winter2025
       PGPASSWORD: winter2025
     steps:
-      - name: Start preinstalled PostgreSQL on Windows
+      - name: Install PostgreSQL on Windows
+        run: choco install postgresql16 --params "/Password:${{ env.PGPASSWORD }}" -y
+
+      - name: Add PostgreSQL to PATH
+        run: echo "C:\Program Files\PostgreSQL\16\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8
+
+      - name: Start PostgreSQL Service
         run: |
-          psql -U postgres
-      - name: Create database user
+          net start postgresql-x64-16
+          sc query postgresql-x64-16
+
+      - name: Verify `psql` is Available
         run: |
-          sudo -u postgres psql --command="CREATE USER $PGUSERNAME PASSWORD '$PGPASSWORD'" --command="\du"
-      - name: Create database and allow user
+          echo $env:Path
+          psql --version
+        env:
+          PGPASSWORD: ${{ env.PGPASSWORD }}
+
+      - name: Create Database User
         run: |
-          sudo -u postgres createdb --owner=$PGUSERNAME $PGDATABASE
+          psql -U postgres -c "CREATE USER ${{ env.PGUSERNAME }} WITH PASSWORD '${{ env.PGPASSWORD }}'"
+        env:
+          PGPASSWORD: ${{ env.PGPASSWORD }}
+
+      - name: Create Database
+        run: |
+          psql -U postgres -c "CREATE DATABASE ${{ env.PGDATABASE }} OWNER ${{ env.PGUSERNAME }}"
+        env:
+          PGPASSWORD: ${{ env.PGPASSWORD }}
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
 
