@@ -2,30 +2,56 @@ name: CI
 on: push
 
 jobs:
-  build:
+  ci:
+    name: Windows CI
     runs-on: windows-latest
-
-    services:
-      postgres:
-        image: postgres:16
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        env:
-          POSTGRES_USER: winter2025
-          POSTGRES_PASSWORD: winter2025
-          POSTGRES_DB: winter2025
-
+    timeout-minutes: 30
+    # TODO: Update environment variables with your own database credentials
+    env:
+      PGHOST: localhost
+      PGDATABASE: winter2025
+      PGUSERNAME: winter2025
+      PGPASSWORD: winter2025
     steps:
+      - name: Download PostgreSQL 16 ZIP
+        run: |
+          Invoke-WebRequest -Uri "https://get.enterprisedb.com/postgresql/postgresql-16.1-1-windows-x64-binaries.zip" -OutFile "postgresql.zip"
+
+      - name: Extract PostgreSQL
+        run: |
+          Expand-Archive -Path "postgresql.zip" -DestinationPath "C:\pgsql"
+
+      - name: Initialize PostgreSQL Database
+        run: |
+          C:\pgsql\pgsql\bin\initdb.exe -D C:\pgsql\data --username=postgres --pwfile=<(echo ${{ env.PGPASSWORD }})
+        env:
+          PGPASSWORD: ${{ env.PGPASSWORD }}
+
+      - name: Start PostgreSQL
+        run: |
+          C:\pgsql\pgsql\bin\pg_ctl.exe -D C:\pgsql\data start
+
+      - name: Verify PostgreSQL
+        run: |
+          C:\pgsql\pgsql\bin\psql.exe --version
+
+      - name: Create Database User
+        run: |
+          C:\pgsql\pgsql\bin\psql.exe -U postgres -c "CREATE USER ${{ env.PGUSERNAME }} WITH PASSWORD '${{ env.PGPASSWORD }}'"
+        env:
+          PGPASSWORD: ${{ env.PGPASSWORD }}
+
+      - name: Create Database
+        run: |
+          C:\pgsql\pgsql\bin\psql.exe -U postgres -c "CREATE DATABASE ${{ env.PGDATABASE }} OWNER ${{ env.PGUSERNAME }}"
+        env:
+          PGPASSWORD: ${{ env.PGPASSWORD }}
+
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
-        with:
-          version: 7
 
+      # Use the official setup-node action (sets up Node.js):
+      # https://github.com/actions/setup-node
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
