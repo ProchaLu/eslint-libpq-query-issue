@@ -13,24 +13,26 @@ jobs:
       PGUSERNAME: winter2025
       PGPASSWORD: winter2025
     steps:
-      - name: Set up PostgreSQL on Windows
-        uses: Harmon758/postgresql-action@v1
-        with:
-          postgresql version: '16'
-          postgresql user: ${{ env.PGUSERNAME }}
-          postgresql password: ${{ env.PGPASSWORD }}
-
-      - name: Verify PostgreSQL is Running
+      - name: Download PostgreSQL ZIP
         run: |
-          psql -U postgres -c "SELECT 1"
-        env:
-          PGPASSWORD: ${{ env.PGPASSWORD }}
+          Invoke-WebRequest -Uri "https://get.enterprisedb.com/postgresql/postgresql-16.1-1-windows-x64-binaries.zip" -OutFile "postgresql.zip"
 
-      - name: Create Database
+      - name: Extract PostgreSQL
         run: |
-          psql -U postgres -c "CREATE DATABASE ${{ env.PGDATABASE }} OWNER ${{ env.PGUSERNAME }}"
-        env:
-          PGPASSWORD: ${{ env.PGPASSWORD }}
+          Expand-Archive -Path "postgresql.zip" -DestinationPath "C:\pgsql"
+
+      - name: Initialize PostgreSQL Database
+        run: |
+          C:\pgsql\pgsql\bin\initdb.exe -D C:\pgsql\data --username=postgres --pwfile=<(echo ${{ env.PGPASSWORD }})
+
+      - name: Start PostgreSQL
+        run: |
+          C:\pgsql\pgsql\bin\pg_ctl.exe -D C:\pgsql\data start
+
+      - name: Verify PostgreSQL
+        run: |
+          C:\pgsql\pgsql\bin\psql.exe --version
+
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
 
