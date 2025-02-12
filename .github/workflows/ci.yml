@@ -72,7 +72,12 @@ jobs:
         run: pnpm build
       - name: Check TypeScript Types
         run: pnpm tsc
-      - name: Lint with ESLint
-        run: pnpm eslint . --max-warnings 0
+      - name: Lint with ESLint and Show Exit Code
+        run: |
+          pnpm eslint . --max-warnings 0
+          EXIT_CODE=$?
+          echo "ESLint exit code: $EXIT_CODE"
+          exit $EXIT_CODE
+        shell: bash
       - name: Lint with Stylelint
         run: pnpm stylelint '**/*.{css,scss,less,js,tsx}'
