@@ -66,6 +66,13 @@ jobs:
         run: pnpm build
       - name: Check TypeScript Types
         run: pnpm tsc
+
+      - name: Run eslint.mjs
+        shell: bash
+        run: |
+          echo "Running eslint.mjs..."
+          node eslint.mjs
+
       - name: Lint with ESLint and Show Exit Code
         run: |
           echo "Running ESLint..."
